@@ -24,14 +24,14 @@ def get_transform(tf_message: Transform):
     return out
 
 def tf_list_to_string(mlist: list):
-    return "tx, ty, tz, qx, qy, qz, qw: [%.4f, %.4f, %.4f, %.4f, %.4f, %.4f, %.4f]" % tuple(mlist)
+    return "tx, ty, tz, qw, qx, qy, qz: [%.4f, %.4f, %.4f, %.4f, %.4f, %.4f, %.4f]" % tuple(mlist)
 
 def urdf_list_to_string(mlist: list):
     return "translation: %.4f, %.4f, %.4f   rpy: %.4f, %.4f, %.4f" % tuple(mlist)
 
 def tf_to_urdf_tf(mlist: list):
     """
-    Transform tx, ty, tz, qx, qy, qz, qw into tx, ty, tz, r, p, y
+    Transform tx, ty, tz, qw, qx, qy, qz into tx, ty, tz, r, p, y
     """
     res = mlist[0:3]
 
@@ -90,24 +90,24 @@ class DataCollector(Node):
     def capture_point_service_callback(self, req: Trigger.Request, resp: Trigger.Response):
         # get transforms 
         time = self.get_clock().now() - Duration(seconds=1)
-
+        time = Duration(seconds=0)
         try:
             # here we trick the library (it is actually made for eye_in_hand only). Trust me, I'm an engineer
             if self.calibration_type == "eye-in-hand":
                 robot = self.tf_buffer.lookup_transform(self.robot_base_frame,
                                                     self.robot_effector_frame, time,
-                                                    Duration(seconds=2))
+                                                    Duration(seconds=10))
             elif self.calibration_type == "eye-on-base":
                 robot = self.tf_buffer.lookup_transform(self.robot_effector_frame,
                                                     self.robot_base_frame, time,
-                                                    Duration(seconds=2))
+                                                    Duration(seconds=10))
             else:
                 msg = "Invalid calibration_type: " + self.calibration_type + ". Options are eye-in-hand or eye-on-base"
                 self.get_logger().error(msg)
 
             tracking = self.tf_buffer.lookup_transform(self.tracking_base_frame,
                                                     self.tracking_marker_frame, time,
-                                                    Duration(seconds=2))
+                                                    Duration(seconds=10))
         except TransformException as ex:
             self.get_logger().error("Could not get transforms")
             self.get_logger().error(str(ex))
